@@ -1,0 +1,12 @@
+pip install tqdm
+pip install chardet
+pip install unstructured
+pip install exceptions
+pip install python-docx
+pip install ctransformers
+pip install atlassian-python-api
+pip install pandas
+pip install python-pptx
+pip install openpyxl
+pip install constants
+

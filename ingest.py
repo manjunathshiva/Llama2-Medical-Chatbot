@@ -51,25 +51,20 @@ def create_vector_db():
                              silent_errors=True
                  ),
 
-#                  'wiki ':   ConfluenceLoader(url="https://yoursite.atlassian.com/wiki", 
-#                                          token="12345")
                }
 
 
     documents = []
     for loader in loaders.values():
-       if loader == 'wiki':
-            documents.extend(loader.load(space_key="SPACE", include_attachments=True, limit=50, max_pages=50))
-       else:
-            documents.extend(loader.load())
+         documents.extend(loader.load())
 
 
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500,
-                                                   chunk_overlap=50)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=512,
+                                                   chunk_overlap=80)
     texts = text_splitter.split_documents(documents)
 
-    embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2',
+    embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-mpnet-base-v2',
                                        model_kwargs={'device': 'cpu'})
     # Chroma client
     chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS , path=persist_directory)
@@ -80,7 +75,7 @@ def create_vector_db():
     db = Chroma.from_documents(texts, embeddings, persist_directory=persist_directory, client_settings=CHROMA_SETTINGS, client=chroma_client)
     db.persist()
     db = None
-    
+    print(f"Run chainlit run model.py -w")
 
    # db = FAISS.from_documents(texts, embeddings)
    # db.save_local(DB_FAISS_PATH)

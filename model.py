@@ -47,16 +47,18 @@ def retrieval_qa_chain(llm, prompt, db):
 def load_llm():
     # Load the locally downloaded model here
     llm = CTransformers(
-        model = "TheBloke/Llama-2-7B-Chat-GGML",
+        model = "./models/llama-2-7b-chat.Q8_0.gguf",
         model_type="llama",
         max_new_tokens = 512,
-        temperature = 0.2
+        temperature = 0.01,
+        gpu_layers=35,
+        context_lenght=1024,
     )
     return llm
 
 #QA Model Function
 def qa_bot():
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2",
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2",
                                        model_kwargs={'device': 'cpu'})
     chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS , path=persist_directory)
     db = Chroma(persist_directory=persist_directory, embedding_function=embeddings, client_settings=CHROMA_SETTINGS, client=chroma_client)
