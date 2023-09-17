@@ -1,22 +1,20 @@
 from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
 from langchain.document_loaders import PyPDFLoader, DirectoryLoader,UnstructuredWordDocumentLoader
 from langchain.document_loaders import UnstructuredExcelLoader, UnstructuredPowerPointLoader
 from langchain.document_loaders import ConfluenceLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter 
+from langchain.text_splitter import RecursiveCharacterTextSplitter,CharacterTextSplitter, TokenTextSplitter
 from langchain.vectorstores import Chroma
 
 from constants import CHROMA_SETTINGS
 import chromadb
+import os
 
 DATA_PATH = 'data/'
-#DB_FAISS_PATH = 'vectorstore/db_faiss'
 persist_directory =  CHROMA_SETTINGS.persist_directory
 
 
 # Create vector database
 def create_vector_db():
- #   text_loader_kwargs={'autodetect_encoding': True}
     
     loaders =  {
                  '.pdf':  DirectoryLoader(DATA_PATH,
@@ -55,6 +53,35 @@ def create_vector_db():
 
 
     documents = []
+
+    config = {
+          "confluence_url":"https://templates.atlassian.net/wiki/",
+          "username":None,
+          "api_key":None,
+          "space_key":"RD"
+          }
+    
+    confluence_url = config.get("confluence_url",None)
+    username = config.get("username",None)
+    api_key = config.get("api_key",None)
+    space_key = config.get("space_key",None)
+
+    embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-mpnet-base-v2',
+                                       model_kwargs={'device': 'cpu'})
+    documents = []
+   ## 1. Extract the documents
+    loader = ConfluenceLoader(
+       url=confluence_url,
+       username = username,
+       api_key= api_key
+   )
+    
+    documents = loader.load(
+      space_key=space_key,
+      limit=100
+    )
+
+ 
     for loader in loaders.values():
          documents.extend(loader.load())
 
@@ -64,8 +91,7 @@ def create_vector_db():
                                                    chunk_overlap=80)
     texts = text_splitter.split_documents(documents)
 
-    embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-mpnet-base-v2',
-                                       model_kwargs={'device': 'cpu'})
+
     # Chroma client
     chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS , path=persist_directory)
     
@@ -73,12 +99,11 @@ def create_vector_db():
     # Create and store locally vectorstore
     print(f"Creating embeddings. May take some minutes...")
     db = Chroma.from_documents(texts, embeddings, persist_directory=persist_directory, client_settings=CHROMA_SETTINGS, client=chroma_client)
+    
     db.persist()
     db = None
     print(f"Run chainlit run model.py -w")
 
-   # db = FAISS.from_documents(texts, embeddings)
-   # db.save_local(DB_FAISS_PATH)
 
 if __name__ == "__main__":
     create_vector_db()
