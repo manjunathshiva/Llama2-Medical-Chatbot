@@ -58,15 +58,13 @@ def create_vector_db():
           "confluence_url":"https://templates.atlassian.net/wiki/",
           "username":None,
           "api_key":None,
-          "space_key":"RD"
           }
     
     confluence_url = config.get("confluence_url",None)
     username = config.get("username",None)
     api_key = config.get("api_key",None)
-    space_key = config.get("space_key",None)
 
-    embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-mpnet-base-v2',
+    embeddings = HuggingFaceEmbeddings(model_name='Muennighoff/SGPT-125M-weightedmean-msmarco-specb-bitfit',
                                        model_kwargs={'device': 'cpu'})
     documents = []
    ## 1. Extract the documents
@@ -76,11 +74,9 @@ def create_vector_db():
        api_key= api_key
    )
     
-    documents = loader.load(
-      space_key=space_key,
-      limit=100
-    )
-
+    documents = loader.load(space_key="RD",limit=100)
+    documents.extend(loader.load(space_key="SWPRJ",limit=100))
+    documents.extend(loader.load(space_key="CW",limit=100))
  
     for loader in loaders.values():
          documents.extend(loader.load())

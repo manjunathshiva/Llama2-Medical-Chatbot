@@ -44,16 +44,17 @@ def load_llm():
     llm = CTransformers(
         model = "./models/llama-2-7b-chat.Q8_0.gguf",
         model_type="llama",
-        max_new_tokens = 512,
+        max_new_tokens = 256,
         temperature = 0.01,
         gpu_layers=35,
         context_lenght=1024,
+        repetation_penalty=1.3
     )
     return llm
 
 #QA Model Function
 def qa_bot():
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2",
+    embeddings = HuggingFaceEmbeddings(model_name='Muennighoff/SGPT-125M-weightedmean-msmarco-specb-bitfit',
                                        model_kwargs={'device': 'cpu'})
     chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS , path=persist_directory)
     db = Chroma(persist_directory=persist_directory, embedding_function=embeddings, client_settings=CHROMA_SETTINGS, client=chroma_client)
