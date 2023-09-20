@@ -2,7 +2,7 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.document_loaders import PyPDFLoader, DirectoryLoader,UnstructuredWordDocumentLoader
 from langchain.document_loaders import UnstructuredExcelLoader, UnstructuredPowerPointLoader
 from langchain.document_loaders import ConfluenceLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter,CharacterTextSplitter, TokenTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
 
 from constants import CHROMA_SETTINGS
@@ -64,7 +64,7 @@ def create_vector_db():
     username = config.get("username",None)
     api_key = config.get("api_key",None)
 
-    embeddings = HuggingFaceEmbeddings(model_name='Muennighoff/SGPT-125M-weightedmean-msmarco-specb-bitfit',
+    embeddings = HuggingFaceEmbeddings(model_name='thenlper/gte-base',
                                        model_kwargs={'device': 'cpu'})
     documents = []
    ## 1. Extract the documents
@@ -74,17 +74,17 @@ def create_vector_db():
        api_key= api_key
    )
     
-    documents = loader.load(space_key="RD",limit=100)
-    documents.extend(loader.load(space_key="SWPRJ",limit=100))
-    documents.extend(loader.load(space_key="CW",limit=100))
+    documents = loader.load(space_key="RD",limit=1000)
+    documents.extend(loader.load(space_key="SWPRJ",limit=1000))
+    documents.extend(loader.load(space_key="CW",limit=1000))
  
     for loader in loaders.values():
          documents.extend(loader.load())
 
 
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=512,
-                                                   chunk_overlap=80)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500,
+                                                   chunk_overlap=100)
     texts = text_splitter.split_documents(documents)
 
 

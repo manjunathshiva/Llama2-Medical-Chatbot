@@ -32,7 +32,7 @@ def set_custom_prompt():
 def retrieval_qa_chain(llm, prompt, db):
     qa_chain = RetrievalQA.from_chain_type(llm=llm,
                                        chain_type='stuff',
-                                       retriever=db.as_retriever(search_kwargs={'k': 2}),
+                                       retriever=db.as_retriever(search_kwargs={'k': 1}),
                                        return_source_documents=True,
                                        chain_type_kwargs={'prompt': prompt}
                                        )
@@ -44,17 +44,17 @@ def load_llm():
     llm = CTransformers(
         model = "./models/llama-2-7b-chat.Q8_0.gguf",
         model_type="llama",
-        max_new_tokens = 256,
+        max_new_tokens = 1024,
         temperature = 0.01,
         gpu_layers=35,
-        context_lenght=1024,
+        context_lenght=512,
         repetation_penalty=1.3
     )
     return llm
 
 #QA Model Function
 def qa_bot():
-    embeddings = HuggingFaceEmbeddings(model_name='Muennighoff/SGPT-125M-weightedmean-msmarco-specb-bitfit',
+    embeddings = HuggingFaceEmbeddings(model_name='thenlper/gte-base',
                                        model_kwargs={'device': 'cpu'})
     chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS , path=persist_directory)
     db = Chroma(persist_directory=persist_directory, embedding_function=embeddings, client_settings=CHROMA_SETTINGS, client=chroma_client)
