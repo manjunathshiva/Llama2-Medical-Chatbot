@@ -1,24 +1,23 @@
-from langchain import PromptTemplate
+#from langchain import PromptTemplate
 from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.llms import CTransformers
+#from langchain.llms import CTransformers
 from langchain.chains import RetrievalQA
 from langchain.vectorstores import Chroma
 import chainlit as cl
 from constants import CHROMA_SETTINGS
 import chromadb
+from langchain.prompts import PromptTemplate
+from langchain.llms import LlamaCpp
+
 
 persist_directory = CHROMA_SETTINGS.persist_directory
 
-custom_prompt_template = """Use the following pieces of information to answer the user's question.
-If you don't know the answer, just say that you don't know, don't try to make up an answer.
+custom_prompt_template = """Answer the question based on the context below. Keep the answer short and concise. Respond "Unsure about answer" if not sure about the answer.
 
 Context: {context}
 Question: {question}
-
-Only return the helpful answer below and nothing else.
-Helpful answer:
+Answer:
 """
-
 
 def set_custom_prompt():
     """
@@ -26,6 +25,7 @@ def set_custom_prompt():
     """
     prompt = PromptTemplate(template=custom_prompt_template,
                             input_variables=['context', 'question'])
+    
     return prompt
 
 #Retrieval QA Chain
@@ -41,20 +41,32 @@ def retrieval_qa_chain(llm, prompt, db):
 #Loading the model
 def load_llm():
     # Load the locally downloaded model here
-    llm = CTransformers(
-        model = "./models/llama-2-7b-chat.Q8_0.gguf",
-        model_type="llama",
-        max_new_tokens = 1024,
-        temperature = 0.01,
-        gpu_layers=35,
-        context_lenght=512,
-        repetation_penalty=1.3
-    )
+    #llm = CTransformers(
+    #    model = "./models/mistral-7b-instruct-v0.1.Q8_0.gguf",
+    #    model_type="mistral",
+    #    max_new_tokens = 512,
+    #    temperature = 0.01,
+    #    gpu_layers=35,
+    #    context_lenght=2048,
+    #    repetation_penalty=1.4
+    #)
+    llm = LlamaCpp(
+    model_path="./models/mistral-7b-instruct-v0.1.Q8_0.gguf",
+    repetition_penalty=1.3,
+   # n_gpu_layers=35,
+    temperature=0.01,
+    max_tokens=1024,
+    n_ctx=2048,
+    verbose=True,
+    #n_gpu_layers = 1,
+    #n_batch = 512,
+    #f16_kv=True,  # MUST set to True, otherwise you will run into problem after a couple of calls
+  )
     return llm
 
 #QA Model Function
 def qa_bot():
-    embeddings = HuggingFaceEmbeddings(model_name='thenlper/gte-base',
+    embeddings = HuggingFaceEmbeddings(model_name='/Volumes/FastSSD2/LLM/LamaIndex/llamaindex-metadata-financial-reports/embedding-model/BAAI_bge-large-en-v1.5',
                                        model_kwargs={'device': 'cpu'})
     chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS , path=persist_directory)
     db = Chroma(persist_directory=persist_directory, embedding_function=embeddings, client_settings=CHROMA_SETTINGS, client=chroma_client)
@@ -65,11 +77,6 @@ def qa_bot():
 
     return qa
 
-#output function
-def final_result(query):
-    qa_result = qa_bot()
-    response = qa_result({'query': query})
-    return response
 
 #chainlit code
 @cl.on_chat_start
@@ -94,7 +101,8 @@ async def main(message):
     sources = res["source_documents"]
 
     if sources:
-        answer += f"\nSources:" + str(sources)
+        for source in sources:
+            answer += f"\nSources:" + str(source.metadata['source'])
     else:
         answer += "\nNo sources found"
 

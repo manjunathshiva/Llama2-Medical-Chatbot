@@ -64,7 +64,7 @@ def create_vector_db():
     username = config.get("username",None)
     api_key = config.get("api_key",None)
 
-    embeddings = HuggingFaceEmbeddings(model_name='thenlper/gte-base',
+    embeddings = HuggingFaceEmbeddings(model_name='BAAI/bge-base-en-v1.5',
                                        model_kwargs={'device': 'cpu'})
     documents = []
    ## 1. Extract the documents
@@ -83,8 +83,8 @@ def create_vector_db():
 
 
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500,
-                                                   chunk_overlap=100)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,
+                                                   chunk_overlap=200)
     texts = text_splitter.split_documents(documents)
 
 
