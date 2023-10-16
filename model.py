@@ -74,7 +74,7 @@ def load_llm():
 
 #QA Model Function
 def qa_bot():
-    embeddings = HuggingFaceEmbeddings(model_name='/Volumes/FastSSD2/LLM/LamaIndex/llamaindex-metadata-financial-reports/embedding-model/BAAI_bge-large-en-v1.5',
+    embeddings = HuggingFaceEmbeddings(model_name='./models/BAAI_bge-large-en-v1.5',
                                        model_kwargs={'device': 'cpu'})
     chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS , path=persist_directory)
     db = Chroma(persist_directory=persist_directory, embedding_function=embeddings, client_settings=CHROMA_SETTINGS, client=chroma_client)
