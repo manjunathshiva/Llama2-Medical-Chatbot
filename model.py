@@ -17,12 +17,12 @@ Question: {question}
 Answer:
 """
 
-mistral_prompt_template = """<s>[INST]Answer the question based on the context below. Keep the answer detailed. Respond "Unsure about answer" if not sure about the answer.
+mistral_prompt_template = """<s>[INST]Answer the question based on the context below. Keep the answer short and concise. Respond "Unsure about answer" if not sure about the answer.
 
 Context: {context}
 Question: {question}
 Answer:
-[/INST]
+[/INST]</s>
 """
 
 qa_prompt_template = (
@@ -36,12 +36,21 @@ qa_prompt_template = (
     "Answer: "
 )
 
+qa_template = """<s>[INST] You are a helpful assistant.
+Use the following context to Answer the question below briefly:
+
+{context}
+
+{question} [/INST] </s>
+"""
+
 def set_custom_prompt():
     """
     Prompt template for QA retrieval for each vectorstore
     """
-    prompt = PromptTemplate(template=qa_prompt_template,
-                            input_variables=['context', 'question'])
+    #prompt = PromptTemplate(template=qa_prompt_template,
+    #                        input_variables=['context', 'question'])
+    prompt = PromptTemplate.from_template(qa_template)
     
     return prompt
 
