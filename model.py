@@ -10,11 +10,36 @@ from langchain.llms import LlamaCpp
 
 persist_directory = CHROMA_SETTINGS.persist_directory
 
-custom_prompt_template = """Answer the question based on the context below. Keep the answer short and concise. Respond "Unsure about answer" if not sure about the answer.
-
+zypher_prompt_template = """
+<|system|>
+Answer the question based on the context below. Keep the answer medium and concise. Respond "Unsure about answer" if not sure about the answer.
+</s>
+<|user|>
 Context: {context}
 Question: {question}
 Answer:
+</s>
+<|assistant|>
+"""
+stableLM_zephyr_template = """
+<|user|>
+Answer the question based on the context below. Keep the answer short and concise. Respond "Unsure about answer" if not sure about the answer.
+Context: {context}
+Question: {question}
+Answer:
+<|endoftext|>
+<|assistant|>
+"""
+
+yi_prompt_template = """
+<|im_start|>system
+Answer the question based on the context below. Keep the answer medium and concise. Respond "Unsure about answer" if not sure about the answer.<|im_end|>
+<|im_start|>user
+Context: {context}
+Question: {question}
+Answer:
+<|im_end|>
+<|im_start|>assistant
 """
 
 mistral_prompt_template = """<s>[INST]Answer the question based on the context below. Keep the answer short and concise. Respond "Unsure about answer" if not sure about the answer.
@@ -22,7 +47,7 @@ mistral_prompt_template = """<s>[INST]Answer the question based on the context b
 Context: {context}
 Question: {question}
 Answer:
-[/INST]</s>
+[/INST]
 """
 
 qa_prompt_template = (
@@ -36,12 +61,28 @@ qa_prompt_template = (
     "Answer: "
 )
 
+qa_prompt_template_zypher = (
+    "<|system|>"
+    "</s>"
+    "<|user|>"
+    "Context information is below.\n"
+    "---------------------\n"
+    "{context}\n"
+    "---------------------\n"
+    "Given the context information and not prior knowledge, "
+    "answer the query.\n"
+    "Query: {question}\n"
+    "Answer: "
+    "</s>"
+    "<|assistant|>"
+)
+
 qa_template = """<s>[INST] You are a helpful assistant.
 Use the following context to Answer the question below briefly:
 
 {context}
 
-{question} [/INST] </s>
+{question} [/INST]
 """
 
 def set_custom_prompt():
@@ -50,7 +91,7 @@ def set_custom_prompt():
     """
     #prompt = PromptTemplate(template=qa_prompt_template,
     #                        input_variables=['context', 'question'])
-    prompt = PromptTemplate.from_template(qa_template)
+    prompt = PromptTemplate.from_template(stableLM_zephyr_template)
     
     return prompt
 
@@ -58,7 +99,7 @@ def set_custom_prompt():
 def retrieval_qa_chain(llm, prompt, db):
     qa_chain = RetrievalQA.from_chain_type(llm=llm,
                                        chain_type='stuff',
-                                       retriever=db.as_retriever(search_kwargs={'k': 1}),
+                                       retriever=db.as_retriever(search_kwargs={'k': 3},search_type="mmr"),
                                        return_source_documents=True,
                                        chain_type_kwargs={'prompt': prompt}
                                        )
@@ -68,15 +109,15 @@ def retrieval_qa_chain(llm, prompt, db):
 def load_llm():
     # Load the locally downloaded model here
     llm = LlamaCpp(
-    model_path="./models/mistral-7b-instruct-v0.1.Q8_0.gguf",
-    repetition_penalty=1.3,
-    #n_gpu_layers=35,
+    model_path="./models/stablelm-zephyr-3b.Q8_0.gguf",
+    repetition_penalty=1.4,
     temperature=0.01,
-    max_tokens=1024,
-    n_ctx=3900,
+    max_tokens=7500,
+    n_ctx=8192,
+    top_k=5,
     verbose=True,
     #n_gpu_layers = 1,
-    n_batch = 512,
+    n_batch = 1024,
     #f16_kv=True,  # MUST set to True, otherwise you will run into problem after a couple of calls
   )
     return llm
