@@ -64,7 +64,7 @@ def create_vector_db():
     username = config.get("username",None)
     api_key = config.get("api_key",None)
 
-    embeddings = HuggingFaceEmbeddings(model_name='BAAI/bge-base-en-v1.5',
+    embeddings = HuggingFaceEmbeddings(model_name='BAAI/bge-large-en-v1.5',
                                        model_kwargs={'device': 'cpu'})
     documents = []
    ## 1. Extract the documents
@@ -74,17 +74,17 @@ def create_vector_db():
        api_key= api_key
    )
     
-    documents = loader.load(space_key="RD",limit=1000)
-    documents.extend(loader.load(space_key="SWPRJ",limit=1000))
-    documents.extend(loader.load(space_key="CW",limit=1000))
+   # documents = loader.load(space_key="RD",limit=1000)
+   # documents.extend(loader.load(space_key="SWPRJ",limit=1000))
+   # documents.extend(loader.load(space_key="CW",limit=1000))
  
     for loader in loaders.values():
          documents.extend(loader.load())
 
 
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,
-                                                   chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500,
+                                                   chunk_overlap=100)
     texts = text_splitter.split_documents(documents)
 
 

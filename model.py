@@ -1,11 +1,11 @@
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.chains import RetrievalQA
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 import chainlit as cl
 from constants import CHROMA_SETTINGS
 import chromadb
 from langchain.prompts import PromptTemplate
-from langchain.llms import LlamaCpp
+from langchain_community.llms import LlamaCpp
 
 
 persist_directory = CHROMA_SETTINGS.persist_directory
@@ -91,7 +91,7 @@ def set_custom_prompt():
     """
     #prompt = PromptTemplate(template=qa_prompt_template,
     #                        input_variables=['context', 'question'])
-    prompt = PromptTemplate.from_template(stableLM_zephyr_template)
+    prompt = PromptTemplate.from_template(zypher_prompt_template)
     
     return prompt
 
@@ -99,7 +99,7 @@ def set_custom_prompt():
 def retrieval_qa_chain(llm, prompt, db):
     qa_chain = RetrievalQA.from_chain_type(llm=llm,
                                        chain_type='stuff',
-                                       retriever=db.as_retriever(search_kwargs={'k': 3},search_type="mmr"),
+                                       retriever=db.as_retriever(search_kwargs={'k': 3}),
                                        return_source_documents=True,
                                        chain_type_kwargs={'prompt': prompt}
                                        )
@@ -109,23 +109,24 @@ def retrieval_qa_chain(llm, prompt, db):
 def load_llm():
     # Load the locally downloaded model here
     llm = LlamaCpp(
-    model_path="./models/stablelm-zephyr-3b.Q8_0.gguf",
+    model_path="./models/zephyr-7b-beta.Q4_K_M.gguf",
     repetition_penalty=1.4,
     temperature=0.01,
-    max_tokens=7500,
-    n_ctx=8192,
-    top_k=5,
+    max_tokens=1500,
+    n_ctx=2048,
+    top_k=20,
     verbose=True,
-    #n_gpu_layers = 1,
-    n_batch = 1024,
-    #f16_kv=True,  # MUST set to True, otherwise you will run into problem after a couple of calls
+    #n_gpu_layers = 10,
+    n_batch = 512,
+    f16_kv=True,  # MUST set to True, otherwise you will run into problem after a couple of calls
   )
     return llm
 
 #QA Model Function
 def qa_bot():
     embeddings = HuggingFaceEmbeddings(model_name='./models/BAAI_bge-large-en-v1.5',
-                                       model_kwargs={'device': 'cpu'})
+                                       model_kwargs={'device': 'cpu'},
+                                       multi_process=True)
     chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS , path=persist_directory)
     db = Chroma(persist_directory=persist_directory, embedding_function=embeddings, client_settings=CHROMA_SETTINGS, client=chroma_client)
 
@@ -154,7 +155,7 @@ async def main(message):
         stream_final_answer=True, answer_prefix_tokens=["FINAL", "ANSWER"]
     )
     cb.answer_reached = True
-    res = await chain.acall(message, callbacks=[cb])
+    res = await chain.ainvoke(message.content, callbacks=[cb])
     answer = res["result"]
     sources = res["source_documents"]
 
