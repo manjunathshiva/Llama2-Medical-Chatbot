@@ -1,9 +1,9 @@
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.document_loaders import PyPDFLoader, DirectoryLoader,UnstructuredWordDocumentLoader
-from langchain.document_loaders import UnstructuredExcelLoader, UnstructuredPowerPointLoader
-from langchain.document_loaders import ConfluenceLoader
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader,UnstructuredWordDocumentLoader
+from langchain_community.document_loaders import UnstructuredExcelLoader, UnstructuredPowerPointLoader
+from langchain_community.document_loaders import ConfluenceLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 
 from constants import CHROMA_SETTINGS
 import chromadb
@@ -64,7 +64,7 @@ def create_vector_db():
     username = config.get("username",None)
     api_key = config.get("api_key",None)
 
-    embeddings = HuggingFaceEmbeddings(model_name='BAAI/bge-large-en-v1.5',
+    embeddings = HuggingFaceEmbeddings(model_name='./models/BAAI_bge-base-en-v1.5',
                                        model_kwargs={'device': 'cpu'})
     documents = []
    ## 1. Extract the documents

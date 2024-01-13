@@ -124,7 +124,7 @@ def load_llm():
 
 #QA Model Function
 def qa_bot():
-    embeddings = HuggingFaceEmbeddings(model_name='./models/BAAI_bge-large-en-v1.5',
+    embeddings = HuggingFaceEmbeddings(model_name='./models/BAAI_bge-base-en-v1.5',
                                        model_kwargs={'device': 'cpu'},
                                        multi_process=True)
     chroma_client = chromadb.PersistentClient(settings=CHROMA_SETTINGS , path=persist_directory)
@@ -149,7 +149,7 @@ async def start():
     cl.user_session.set("chain", chain)
 
 @cl.on_message
-async def main(message):
+async def main(message: cl.Message):
     chain = cl.user_session.get("chain") 
     cb = cl.AsyncLangchainCallbackHandler(
         stream_final_answer=True, answer_prefix_tokens=["FINAL", "ANSWER"]
